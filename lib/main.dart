@@ -532,40 +532,59 @@ class MedicationTimerState extends State<MedicationTimer> {
     setState(() {
       _timers.add(newTimer);
     });
-
+    // Subscribe to timer updates
+    newTimer.addListener(() {
+      if (mounted) setState(() {});
+    });
     _resetForm();
   }
 
   void _onTimerComplete(String id) async {
-    final timer = _timers.firstWhere((timer) => timer.id == id);
-
-    // Play alert sound
-    await _audioPlayer.play(AssetSource('sounds/alert.mp3'));
-
-    // Fix: Check if widget is still mounted before using BuildContext
     if (!mounted) return;
 
-    showDialog(
+    final timer = _timers.firstWhere((timer) => timer.id == id);
+    bool isAcknowledged = false;
+
+    // Start playing alert sound in loop
+    await _audioPlayer.play(AssetSource('sounds/alert.mp3'), volume: 1.0);
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+
+    if (!mounted) {
+      await _audioPlayer.stop();
+      return;
+    }
+
+    await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Medication Alert!'),
-        content: Text(
-            '${timer.medicationName} for patient ${timer.patientName} has finished!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _audioPlayer.stop();
-              Navigator.of(ctx).pop();
-              setState(() {
-                _timers.removeWhere((t) => t.id == id);
-              });
-            },
-            child: const Text('ACKNOWLEDGE'),
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text('Medication Alert!'),
+          content: Text(
+            '${timer.medicationName} for patient ${timer.patientName} is due now!',
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () {
+                isAcknowledged = true;
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('ACKNOWLEDGE'),
+            ),
+          ],
+        ),
       ),
     );
+
+    // Stop sound only after acknowledgment
+    await _audioPlayer.stop();
+
+    if (isAcknowledged && mounted) {
+      setState(() {
+        _timers.removeWhere((t) => t.id == id);
+      });
+    }
   }
 
   void _showErrorDialog(String message) {
@@ -816,16 +835,17 @@ class MedicationTimerState extends State<MedicationTimer> {
 }
 
 // Timer Item class to handle individual medication timers
-class TimerItem {
+class TimerItem extends ChangeNotifier {
   final String id;
   final String patientName;
   final String medicationName;
   final int durationInSeconds;
   final Function(String) onComplete;
 
-  late Timer _timer;
+  Timer? _timer;
   int _remainingSeconds;
   bool isRunning = true;
+  bool _isCompleted = false;
 
   TimerItem({
     required this.id,
@@ -841,8 +861,10 @@ class TimerItem {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         _remainingSeconds--;
-      } else {
-        _timer.cancel();
+        notifyListeners();
+      } else if (!_isCompleted) {
+        _isCompleted = true;
+        _timer?.cancel();
         onComplete(id);
       }
     });
@@ -850,20 +872,24 @@ class TimerItem {
 
   void pause() {
     if (isRunning) {
-      _timer.cancel();
+      _timer?.cancel();
       isRunning = false;
+      notifyListeners();
     }
   }
 
   void resume() {
-    if (!isRunning) {
+    if (!isRunning && !_isCompleted) {
       _startTimer();
       isRunning = true;
+      notifyListeners();
     }
   }
 
+  @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
+    super.dispose();
   }
 
   double get progress => 1 - (_remainingSeconds / durationInSeconds);
@@ -872,7 +898,6 @@ class TimerItem {
     final hours = _remainingSeconds ~/ 3600;
     final minutes = (_remainingSeconds % 3600) ~/ 60;
     final seconds = _remainingSeconds % 60;
-
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
