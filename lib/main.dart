@@ -2,21 +2,48 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
-// Removed unused import: shared_preferences
+import 'l10n/app_localizations.dart';
 
 void main() {
   runApp(const MedicationApp());
 }
 
-class MedicationApp extends StatelessWidget {
+class MedicationApp extends StatefulWidget {
   const MedicationApp({Key? key}) : super(key: key);
+
+  @override
+  State<MedicationApp> createState() => _MedicationAppState();
+}
+
+class _MedicationAppState extends State<MedicationApp> {
+  Locale _locale = const Locale('fr');
+
+  void _toggleLanguage() {
+    setState(() {
+      _locale = _locale.languageCode == 'fr'
+          ? const Locale('en')
+          : const Locale('fr');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Medication Management',
+      locale: _locale,
+      localizationsDelegates: [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr'),
+        Locale('en'),
+      ],
       theme: ThemeData(
         primarySwatch: Colors.blue,
         brightness: Brightness.light,
@@ -38,13 +65,17 @@ class MedicationApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const HomePage(),
+      home: Builder(
+        builder: (context) => HomePage(onLanguageToggle: _toggleLanguage),
+      ),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final VoidCallback onLanguageToggle;
+
+  const HomePage({Key? key, required this.onLanguageToggle}) : super(key: key);
 
   @override
   HomePageState createState() => HomePageState();
@@ -68,15 +99,26 @@ class HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medication Management Tool'),
+        title: Text(l10n.get('appTitle')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: widget.onLanguageToggle,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.calculate), text: 'Triple Method'),
-            Tab(icon: Icon(Icons.water_drop), text: 'Drip Rate'),
-            Tab(icon: Icon(Icons.timer), text: 'Medication Timer'),
+          tabs: [
+            Tab(
+                icon: const Icon(Icons.calculate),
+                text: l10n.get('tripleMethod')),
+            Tab(icon: const Icon(Icons.water_drop), text: l10n.get('dripRate')),
+            Tab(
+                icon: const Icon(Icons.timer),
+                text: l10n.get('medicationTimer')),
           ],
         ),
       ),
@@ -90,6 +132,22 @@ class HomePageState extends State<HomePage>
       ),
     );
   }
+}
+
+class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  @override
+  bool isSupported(Locale locale) => ['en', 'fr'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalizations> load(Locale locale) async {
+    final appLocalizations = AppLocalizations(locale);
+    await appLocalizations
+        .load(); // Make sure this method exists in AppLocalizations
+    return appLocalizations;
+  }
+
+  @override
+  bool shouldReload(AppLocalizationsDelegate old) => false;
 }
 
 // 1. Triple Method Calculator
@@ -133,15 +191,16 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Input Error'),
+        title: Text(l10n.get('error')),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.get('ok')),
           ),
         ],
       ),
@@ -168,26 +227,27 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Card(
-            margin: EdgeInsets.only(bottom: 16.0),
+          Card(
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Triple Method Calculator: Calculate the exact volume to administer based on medication concentration and prescribed dose.',
-                style: TextStyle(fontSize: 16.0),
+                l10n.get('tripleMethodDesc'),
+                style: const TextStyle(fontSize: 16.0),
               ),
             ),
           ),
           const SizedBox(height: 8.0),
           TextFormField(
             controller: _medicationConcentrationController,
-            decoration: const InputDecoration(
-              labelText: 'Medication Concentration (mg)',
+            decoration: InputDecoration(
+              labelText: l10n.get('medConcentration'),
               hintText: 'e.g., 1000',
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -198,8 +258,8 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
           const SizedBox(height: 16.0),
           TextFormField(
             controller: _diluteVolumeController,
-            decoration: const InputDecoration(
-              labelText: 'Dilution Volume (ml)',
+            decoration: InputDecoration(
+              labelText: l10n.get('dilutionVolume'),
               hintText: 'e.g., 10',
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -210,8 +270,8 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
           const SizedBox(height: 16.0),
           TextFormField(
             controller: _prescribedDoseController,
-            decoration: const InputDecoration(
-              labelText: 'Prescribed Dose (mg)',
+            decoration: InputDecoration(
+              labelText: l10n.get('prescribedDose'),
               hintText: 'e.g., 700',
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -225,13 +285,13 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
             ),
-            child: const Text('CALCULATE VOLUME',
-                style: TextStyle(fontSize: 16.0)),
+            child: Text(l10n.get('calculateVolume'),
+                style: const TextStyle(fontSize: 16.0)),
           ),
           const SizedBox(height: 8.0),
           TextButton(
             onPressed: _resetForm,
-            child: const Text('Reset Form'),
+            child: Text(l10n.get('reset')),
           ),
           if (_hasCalculated) ...[
             const SizedBox(height: 24.0),
@@ -241,16 +301,16 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const Text(
-                      'RESULT',
-                      style: TextStyle(
+                    Text(
+                      l10n.get('result'),
+                      style: const TextStyle(
                         fontSize: 18.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8.0),
                     Text(
-                      'Administer ${_resultVolume.toStringAsFixed(2)} ml',
+                      '${l10n.get('administer')} ${_resultVolume.toStringAsFixed(2)} ml',
                       style: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
@@ -313,15 +373,16 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Input Error'),
+        title: Text(l10n.get('error')),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.get('ok')),
           ),
         ],
       ),
@@ -350,26 +411,27 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Card(
-            margin: EdgeInsets.only(bottom: 16.0),
+          Card(
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Drip Rate Calculator: Calculate the drops per minute for intravenous medication administration.',
-                style: TextStyle(fontSize: 16.0),
+                l10n.get('dripRateDesc'),
+                style: const TextStyle(fontSize: 16.0),
               ),
             ),
           ),
           const SizedBox(height: 8.0),
           TextFormField(
             controller: _totalVolumeController,
-            decoration: const InputDecoration(
-              labelText: 'Total Volume (ml)',
+            decoration: InputDecoration(
+              labelText: l10n.get('totalVolume'),
               hintText: 'e.g., 500',
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -383,8 +445,8 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
               Expanded(
                 child: TextFormField(
                   controller: _timeHoursController,
-                  decoration: const InputDecoration(
-                    labelText: 'Hours',
+                  decoration: InputDecoration(
+                    labelText: l10n.get('hours'),
                     hintText: 'e.g., 1',
                   ),
                   keyboardType:
@@ -398,8 +460,8 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
               Expanded(
                 child: TextFormField(
                   controller: _timeMinutesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Minutes',
+                  decoration: InputDecoration(
+                    labelText: l10n.get('minutes'),
                     hintText: 'e.g., 30',
                   ),
                   keyboardType:
@@ -414,8 +476,8 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
           const SizedBox(height: 16.0),
           TextFormField(
             controller: _dropFactorController,
-            decoration: const InputDecoration(
-              labelText: 'Drop Factor (drops/ml)',
+            decoration: InputDecoration(
+              labelText: l10n.get('dropFactor'),
               hintText: 'e.g., 20',
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: false),
@@ -429,13 +491,13 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
             ),
-            child: const Text('CALCULATE DRIP RATE',
-                style: TextStyle(fontSize: 16.0)),
+            child: Text(l10n.get('calculateDripRate'),
+                style: const TextStyle(fontSize: 16.0)),
           ),
           const SizedBox(height: 8.0),
           TextButton(
             onPressed: _resetForm,
-            child: const Text('Reset Form'),
+            child: Text(l10n.get('reset')),
           ),
           if (_hasCalculated) ...[
             const SizedBox(height: 24.0),
@@ -445,16 +507,16 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const Text(
-                      'RESULT',
-                      style: TextStyle(
+                    Text(
+                      l10n.get('result'),
+                      style: const TextStyle(
                         fontSize: 18.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8.0),
                     Text(
-                      '${_resultDripRate.round()} drops/minute',
+                      '${_resultDripRate.round()} ${l10n.get('dropsPerMinute')}',
                       style: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
@@ -554,15 +616,16 @@ class MedicationTimerState extends State<MedicationTimer> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: const Text('Medication Alert!'),
+          title: Text(l10n.get('medicationAlert')),
           content: Text(
-            '${timer.medicationName} for patient ${timer.patientName} is due now!',
+            '${timer.medicationName} ${l10n.get('forPatient')} ${timer.patientName} ${l10n.get('isDueNow')}',
           ),
           actions: [
             TextButton(
@@ -570,7 +633,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                 isAcknowledged = true;
                 Navigator.of(ctx).pop();
               },
-              child: const Text('ACKNOWLEDGE'),
+              child: Text(l10n.get('acknowledge')),
             ),
           ],
         ),
@@ -588,15 +651,16 @@ class MedicationTimerState extends State<MedicationTimer> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Input Error'),
+        title: Text(l10n.get('error')),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.get('ok')),
           ),
         ],
       ),
@@ -625,18 +689,19 @@ class MedicationTimerState extends State<MedicationTimer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Card(
-            margin: EdgeInsets.only(bottom: 16.0),
+          Card(
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Medication Timer: Set alerts for medication administration to ensure timely patient care.',
-                style: TextStyle(fontSize: 16.0),
+                l10n.get('medicationTimerDesc'),
+                style: const TextStyle(fontSize: 16.0),
               ),
             ),
           ),
@@ -649,16 +714,16 @@ class MedicationTimerState extends State<MedicationTimer> {
                 children: [
                   TextFormField(
                     controller: _patientNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Patient Name/ID',
+                    decoration: InputDecoration(
+                      labelText: l10n.get('patientName'),
                       hintText: 'e.g., John Doe or Room 101',
                     ),
                   ),
                   const SizedBox(height: 16.0),
                   TextFormField(
                     controller: _medicationNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Medication Name',
+                    decoration: InputDecoration(
+                      labelText: l10n.get('medicationName'),
                       hintText: 'e.g., Normal Saline 0.9%',
                     ),
                   ),
@@ -668,8 +733,8 @@ class MedicationTimerState extends State<MedicationTimer> {
                       Expanded(
                         child: TextFormField(
                           controller: _hoursController,
-                          decoration: const InputDecoration(
-                            labelText: 'Hours',
+                          decoration: InputDecoration(
+                            labelText: l10n.get('hours'),
                             hintText: 'e.g., 1',
                           ),
                           keyboardType: TextInputType.number,
@@ -682,8 +747,8 @@ class MedicationTimerState extends State<MedicationTimer> {
                       Expanded(
                         child: TextFormField(
                           controller: _minutesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Minutes',
+                          decoration: InputDecoration(
+                            labelText: l10n.get('minutes'),
                             hintText: 'e.g., 30',
                           ),
                           keyboardType: TextInputType.number,
@@ -700,28 +765,28 @@ class MedicationTimerState extends State<MedicationTimer> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12.0),
                     ),
-                    child: const Text('ADD TIMER',
-                        style: TextStyle(fontSize: 16.0)),
+                    child: Text(l10n.get('addTimer'),
+                        style: const TextStyle(fontSize: 16.0)),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16.0),
-          const Text(
-            'Active Timers',
-            style: TextStyle(
+          Text(
+            l10n.get('activeTimers'),
+            style: const TextStyle(
               fontSize: 18.0,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8.0),
           if (_timers.isEmpty)
-            const Card(
+            Card(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Center(
-                  child: Text('No active timers'),
+                  child: Text(l10n.get('noActiveTimers')),
                 ),
               ),
             )
@@ -802,7 +867,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                                     vertical: 8.0,
                                   ),
                                 ),
-                                child: const Text('PAUSE'),
+                                child: Text(l10n.get('pause')),
                               )
                             else
                               ElevatedButton(
@@ -818,7 +883,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                                     vertical: 8.0,
                                   ),
                                 ),
-                                child: const Text('RESUME'),
+                                child: Text(l10n.get('resume')),
                               ),
                           ],
                         ),
