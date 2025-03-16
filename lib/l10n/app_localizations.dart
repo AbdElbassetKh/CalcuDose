@@ -58,6 +58,9 @@ class AppLocalizations {
       'example': 'e.g.,',
       'volume': 'ml',
       'selectLanguage': 'Select Language',
+      'medicationTimerDesc':
+          'Set alerts for medication administration to ensure timely patient care.',
+      'noActiveTimers': 'No active timers',
     },
     'fr': {
       'appTitle': 'Gestion des Médicaments',
@@ -78,7 +81,7 @@ class AppLocalizations {
       'dripRateTitle': 'Calculateur de Débit',
       'dripRateDesc':
           'Calculez les gouttes par minute pour l\'administration intraveineuse.',
-      'totalVolume': 'Volume total (ml)',
+      'totalVolume': 'Volume total',
       'hours': 'Heures',
       'minutes': 'Minutes',
       'dropFactor': 'Facteur goutte (gouttes/ml)',
@@ -110,6 +113,9 @@ class AppLocalizations {
       'example': 'ex:',
       'volume': 'ml',
       'selectLanguage': 'Choisir la langue',
+      'medicationTimerDesc':
+          'Définir des alertes pour l\'administration des médicaments.',
+      'noActiveTimers': 'Aucun minuteur actif',
     },
   };
 
