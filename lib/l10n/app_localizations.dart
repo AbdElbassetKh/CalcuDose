@@ -61,6 +61,9 @@ class AppLocalizations {
       'medicationTimerDesc':
           'Set alerts for medication administration to ensure timely patient care.',
       'noActiveTimers': 'No active timers',
+      'medicationAlert': 'Medication Alert',
+      'forPatient': 'for patient',
+      'isDueNow': 'is due now',
     },
     'fr': {
       'appTitle': 'Gestion des Médicaments',
@@ -116,6 +119,9 @@ class AppLocalizations {
       'medicationTimerDesc':
           'Définir des alertes pour l\'administration des médicaments.',
       'noActiveTimers': 'Aucun minuteur actif',
+      'medicationAlert': 'Alerte Médicament',
+      'forPatient': 'pour le patient',
+      'isDueNow': 'est à administrer',
     },
   };
 
