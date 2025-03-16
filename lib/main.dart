@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'l10n/app_localizations.dart';
+import 'utils/unit_converter.dart'; // Ajout de l'import
 
 void main() {
   runApp(const MedicationApp());
@@ -167,6 +168,11 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
   double _resultVolume = 0.0;
   bool _hasCalculated = false;
 
+  // Ajouter les contrôleurs et variables pour les unités
+  WeightUnit _concentrationUnit = WeightUnit.mg;
+  VolumeUnit _volumeUnit = VolumeUnit.ml;
+  WeightUnit _doseUnit = WeightUnit.mg;
+
   void _calculateDose() {
     try {
       final double medicationConcentration =
@@ -175,14 +181,21 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
       final double prescribedDose =
           double.parse(_prescribedDoseController.text);
 
-      if (medicationConcentration <= 0 || diluteVolume <= 0) {
+      // Convertir toutes les valeurs en unités de base (mg et ml)
+      final double concentrationInMg = UnitConverter.convertWeight(
+          medicationConcentration, _concentrationUnit, WeightUnit.mg);
+      final double volumeInMl =
+          UnitConverter.convertVolume(diluteVolume, _volumeUnit, VolumeUnit.ml);
+      final double doseInMg =
+          UnitConverter.convertWeight(prescribedDose, _doseUnit, WeightUnit.mg);
+
+      if (concentrationInMg <= 0 || volumeInMl <= 0) {
         _showErrorDialog('Please enter values greater than zero.');
         return;
       }
 
       setState(() {
-        _resultVolume =
-            (prescribedDose / medicationConcentration) * diluteVolume;
+        _resultVolume = (doseInMg / concentrationInMg) * volumeInMl;
         _hasCalculated = true;
       });
     } catch (e) {
@@ -244,39 +257,111 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
             ),
           ),
           const SizedBox(height: 8.0),
-          TextFormField(
-            controller: _medicationConcentrationController,
-            decoration: InputDecoration(
-              labelText: l10n.get('medConcentration'),
-              hintText: 'e.g., 1000',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _medicationConcentrationController,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${l10n.get('medConcentration')} (${UnitConverter.getWeightSymbol(_concentrationUnit)})',
+                    hintText:
+                        'e.g., 1000 ${UnitConverter.getWeightSymbol(_concentrationUnit)}',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              DropdownButton<WeightUnit>(
+                value: _concentrationUnit,
+                items: WeightUnit.values.map((unit) {
+                  return DropdownMenuItem(
+                    value: unit,
+                    child: Text(unit.name),
+                  );
+                }).toList(),
+                onChanged: (unit) {
+                  if (unit != null) {
+                    setState(() => _concentrationUnit = unit);
+                  }
+                },
+              ),
             ],
           ),
           const SizedBox(height: 16.0),
-          TextFormField(
-            controller: _diluteVolumeController,
-            decoration: InputDecoration(
-              labelText: l10n.get('dilutionVolume'),
-              hintText: 'e.g., 10',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _diluteVolumeController,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${l10n.get('dilutionVolume')} (${UnitConverter.getVolumeSymbol(_volumeUnit)})',
+                    hintText:
+                        'e.g., 10 ${UnitConverter.getVolumeSymbol(_volumeUnit)}',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              DropdownButton<VolumeUnit>(
+                value: _volumeUnit,
+                items: VolumeUnit.values.map((unit) {
+                  return DropdownMenuItem(
+                    value: unit,
+                    child: Text(unit.name),
+                  );
+                }).toList(),
+                onChanged: (unit) {
+                  if (unit != null) {
+                    setState(() => _volumeUnit = unit);
+                  }
+                },
+              ),
             ],
           ),
           const SizedBox(height: 16.0),
-          TextFormField(
-            controller: _prescribedDoseController,
-            decoration: InputDecoration(
-              labelText: l10n.get('prescribedDose'),
-              hintText: 'e.g., 700',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _prescribedDoseController,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${l10n.get('prescribedDose')} (${UnitConverter.getWeightSymbol(_doseUnit)})',
+                    hintText:
+                        'e.g., 700 ${UnitConverter.getWeightSymbol(_doseUnit)}',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              DropdownButton<WeightUnit>(
+                value: _doseUnit,
+                items: WeightUnit.values.map((unit) {
+                  return DropdownMenuItem(
+                    value: unit,
+                    child: Text(unit.name),
+                  );
+                }).toList(),
+                onChanged: (unit) {
+                  if (unit != null) {
+                    setState(() => _doseUnit = unit);
+                  }
+                },
+              ),
             ],
           ),
           const SizedBox(height: 24.0),
@@ -310,7 +395,7 @@ class TripleMethodCalculatorState extends State<TripleMethodCalculator> {
                     ),
                     const SizedBox(height: 8.0),
                     Text(
-                      '${l10n.get('administer')} ${_resultVolume.toStringAsFixed(2)} ml',
+                      '${l10n.get('administer')} ${_resultVolume.toStringAsFixed(2)} ${UnitConverter.getVolumeSymbol(VolumeUnit.ml)}',
                       style: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
@@ -343,9 +428,16 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
   double _resultDripRate = 0.0;
   bool _hasCalculated = false;
 
+  // Ajout des variables pour les unités
+  VolumeUnit _volumeUnit = VolumeUnit.ml;
+
   void _calculateDripRate() {
     try {
-      final double totalVolume = double.parse(_totalVolumeController.text);
+      double totalVolume = double.parse(_totalVolumeController.text);
+      // Convertir le volume en ml pour le calcul
+      totalVolume =
+          UnitConverter.convertVolume(totalVolume, _volumeUnit, VolumeUnit.ml);
+
       double timeInMinutes = 0;
 
       if (_timeHoursController.text.isNotEmpty) {
@@ -428,15 +520,41 @@ class DripRateCalculatorState extends State<DripRateCalculator> {
             ),
           ),
           const SizedBox(height: 8.0),
-          TextFormField(
-            controller: _totalVolumeController,
-            decoration: InputDecoration(
-              labelText: l10n.get('totalVolume'),
-              hintText: 'e.g., 500',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _totalVolumeController,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${l10n.get('totalVolume')} (${UnitConverter.getVolumeSymbol(_volumeUnit)})',
+                    hintText:
+                        'e.g., 500 ${UnitConverter.getVolumeSymbol(_volumeUnit)}',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              DropdownButton<VolumeUnit>(
+                value: _volumeUnit,
+                items: VolumeUnit.values.map((unit) {
+                  return DropdownMenuItem(
+                    value: unit,
+                    child: Text(UnitConverter.getVolumeSymbol(unit)),
+                  );
+                }).toList(),
+                onChanged: (VolumeUnit? newUnit) {
+                  if (newUnit != null) {
+                    setState(() {
+                      _volumeUnit = newUnit;
+                    });
+                  }
+                },
+              ),
             ],
           ),
           const SizedBox(height: 16.0),
