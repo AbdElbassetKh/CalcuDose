@@ -3,13 +3,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/unit_converter.dart'; // Ajout de l'import
 
-void main() {
-  runApp(const MedicationApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  runApp(const AppLoader());
+}
+
+class AppLoader extends StatelessWidget {
+  const AppLoader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initializeApp(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return const MedicationApp();
+        }
+        return MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _initializeApp() async {
+    // Add initialization logic here
+    await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+  }
 }
 
 class MedicationApp extends StatefulWidget {
@@ -21,13 +52,40 @@ class MedicationApp extends StatefulWidget {
 
 class _MedicationAppState extends State<MedicationApp> {
   Locale _locale = const Locale('fr');
+  ThemeMode _themeMode = ThemeMode.system;
+  final _preferences = SharedPreferences.getInstance();
 
-  void _toggleLanguage() {
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await _preferences;
+    setState(() {
+      _locale = Locale(prefs.getString('language') ?? 'fr');
+      _themeMode = ThemeMode.values[prefs.getInt('theme_mode') ?? 0];
+    });
+  }
+
+  void _toggleTheme() async {
+    setState(() {
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+    final prefs = await _preferences;
+    await prefs.setInt('theme_mode', _themeMode.index);
+  }
+
+  void _toggleLanguage() async {
     setState(() {
       _locale = _locale.languageCode == 'fr'
           ? const Locale('en')
           : const Locale('fr');
     });
+    final prefs = await _preferences;
+    await prefs.setString('language', _locale.languageCode);
   }
 
   @override
@@ -65,9 +123,12 @@ class _MedicationAppState extends State<MedicationApp> {
           fillColor: Color(0xFF303030),
         ),
       ),
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       home: Builder(
-        builder: (context) => HomePage(onLanguageToggle: _toggleLanguage),
+        builder: (context) => HomePage(
+          onLanguageToggle: _toggleLanguage,
+          onThemeToggle: _toggleTheme,
+        ),
       ),
     );
   }
@@ -75,8 +136,13 @@ class _MedicationAppState extends State<MedicationApp> {
 
 class HomePage extends StatefulWidget {
   final VoidCallback onLanguageToggle;
+  final VoidCallback onThemeToggle;
 
-  const HomePage({Key? key, required this.onLanguageToggle}) : super(key: key);
+  const HomePage({
+    Key? key,
+    required this.onLanguageToggle,
+    required this.onThemeToggle,
+  }) : super(key: key);
 
   @override
   HomePageState createState() => HomePageState();
@@ -108,6 +174,10 @@ class HomePageState extends State<HomePage>
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: widget.onLanguageToggle,
+          ),
+          IconButton(
+            icon: const Icon(Icons.brightness_6),
+            onPressed: widget.onThemeToggle,
           ),
         ],
         bottom: TabBar(
