@@ -11,7 +11,7 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'appTitle': 'Medication Management',
+      'appTitle': 'CalcuDose',
       'tripleMethod': 'Triple Method',
       'dripRate': 'Drip Rate',
       'medicationTimer': 'Timer',
@@ -66,7 +66,7 @@ class AppLocalizations {
       'isDueNow': 'is due now',
     },
     'fr': {
-      'appTitle': 'Gestion des Médicaments',
+      'appTitle': 'CalcuDose',
       'tripleMethod': 'Méthode Triple',
       'dripRate': 'Débit Goutte',
       'medicationTimer': 'Minuteur',

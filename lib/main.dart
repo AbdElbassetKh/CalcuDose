@@ -91,7 +91,7 @@ class _MedicationAppState extends State<MedicationApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Soins Dose',
+      title: 'CalcuDose',
       locale: _locale,
       localizationsDelegates: [
         AppLocalizationsDelegate(),
@@ -107,20 +107,50 @@ class _MedicationAppState extends State<MedicationApp> {
         primarySwatch: Colors.blue,
         brightness: Brightness.light,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        cardTheme: const CardTheme(
+          elevation: 4,
+          margin: EdgeInsets.symmetric(vertical: 8.0),
+        ),
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),
           filled: true,
           fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ),
       darkTheme: ThemeData(
         primarySwatch: Colors.blue,
         brightness: Brightness.dark,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
+        cardTheme: CardTheme(
+          elevation: 4,
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          color: Colors.grey[800],
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: const OutlineInputBorder(),
           filled: true,
-          fillColor: Color(0xFF303030),
+          fillColor: Colors.grey[800],
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ),
       themeMode: _themeMode,
@@ -878,6 +908,8 @@ class MedicationTimerState extends State<MedicationTimer> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -985,97 +1017,138 @@ class MedicationTimerState extends State<MedicationTimer> {
               itemCount: _timers.length,
               itemBuilder: (ctx, index) {
                 final timer = _timers[index];
+                final progress = timer.progress;
+
+                // Calculate color based on progress
+                Color progressColor;
+                if (progress >= 0.75) {
+                  progressColor = Colors.red;
+                } else if (progress >= 0.5) {
+                  progressColor = Colors.orange;
+                } else if (progress >= 0.25) {
+                  progressColor = Colors.yellow;
+                } else {
+                  progressColor = Colors.green;
+                }
+
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 8.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    timer.patientName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16.0,
+                  elevation: 4,
+                  margin: const EdgeInsets.only(bottom: 12.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: progressColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      timer.patientName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18.0,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    timer.medicationName,
-                                    style: const TextStyle(
-                                      fontSize: 14.0,
+                                    Text(
+                                      timer.medicationName,
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        color: Theme.of(context).hintColor,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.cancel),
-                              onPressed: () {
-                                setState(() {
-                                  _timers.removeAt(index);
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8.0),
-                        LinearProgressIndicator(
-                          value: timer.progress,
-                          backgroundColor: Colors.grey[300],
-                        ),
-                        const SizedBox(height: 8.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              timer.remainingTimeFormatted,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0,
-                              ),
-                            ),
-                            if (timer.isRunning)
-                              ElevatedButton(
+                              IconButton(
+                                icon: const Icon(Icons.cancel),
+                                color: Colors.red.withOpacity(0.8),
                                 onPressed: () {
                                   setState(() {
-                                    timer.pause();
+                                    _timers.removeAt(index);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12.0),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: isDarkMode
+                                  ? Colors.grey[800]
+                                  : Colors.grey[200],
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(progressColor),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 12.0),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: progressColor.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  timer.remainingTimeFormatted,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16.0,
+                                    color: progressColor,
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                icon: Icon(
+                                  timer.isRunning
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                  size: 20,
+                                ),
+                                label: Text(timer.isRunning
+                                    ? l10n.get('pause')
+                                    : l10n.get('resume')),
+                                onPressed: () {
+                                  setState(() {
+                                    timer.isRunning
+                                        ? timer.pause()
+                                        : timer.resume();
                                   });
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
+                                  backgroundColor: timer.isRunning
+                                      ? Colors.orange
+                                      : Colors.green,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                    vertical: 8.0,
+                                    horizontal: 16,
+                                    vertical: 8,
                                   ),
                                 ),
-                                child: Text(l10n.get('pause')),
-                              )
-                            else
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    timer.resume();
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                    vertical: 8.0,
-                                  ),
-                                ),
-                                child: Text(l10n.get('resume')),
                               ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
