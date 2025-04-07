@@ -33,7 +33,7 @@ class _MedicationAppState extends State<MedicationApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Medication Management',
+      title: 'Soins Dose',
       locale: _locale,
       localizationsDelegates: [
         AppLocalizationsDelegate(),
