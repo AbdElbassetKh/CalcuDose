@@ -936,7 +936,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                     controller: _patientNameController,
                     decoration: InputDecoration(
                       labelText: l10n.get('patientName'),
-                      hintText: 'e.g., John Doe or Room 101',
+                      hintText: l10n.get('hintPatientName'),
                     ),
                   ),
                   const SizedBox(height: 16.0),
@@ -944,7 +944,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                     controller: _medicationNameController,
                     decoration: InputDecoration(
                       labelText: l10n.get('medicationName'),
-                      hintText: 'e.g., Normal Saline 0.9%',
+                      hintText: l10n.get('hintMedicationName'),
                     ),
                   ),
                   const SizedBox(height: 16.0),
@@ -955,7 +955,7 @@ class MedicationTimerState extends State<MedicationTimer> {
                           controller: _hoursController,
                           decoration: InputDecoration(
                             labelText: l10n.get('hours'),
-                            hintText: 'e.g., 1',
+                            hintText: l10n.get('hintHours'),
                           ),
                           keyboardType: TextInputType.number,
                           inputFormatters: [

@@ -64,6 +64,10 @@ class AppLocalizations {
       'medicationAlert': 'Medication Alert',
       'forPatient': 'for patient',
       'isDueNow': 'is due now',
+      'hintPatientName': 'e.g., Mohammed or Room 101',
+      'hintMedicationName': 'e.g., Normal Saline 0.9%',
+      'hintHours': 'e.g., 1',
+      'hintMinutes': 'e.g., 30',
     },
     'fr': {
       'appTitle': 'CalcuDose',
@@ -122,6 +126,10 @@ class AppLocalizations {
       'medicationAlert': 'Alerte Médicament',
       'forPatient': 'pour le patient',
       'isDueNow': 'est à administrer',
+      'hintPatientName': 'ex: Mohammed ou Chambre 101',
+      'hintMedicationName': 'ex: Solution saline 0,9%',
+      'hintHours': 'ex: 1',
+      'hintMinutes': 'ex: 30',
     },
   };
 
